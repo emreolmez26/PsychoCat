@@ -1,30 +1,50 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class DoorController : MonoBehaviour
 {
     [Header("Açı Ayarları")]
-    [Tooltip("Kapı açıkken menteşenin Y eksenindeki açısı")]
     [SerializeField] private float openAngle = 90f;
-    [Tooltip("Açılma/kapanma animasyon hızı")]
     [SerializeField] private float speed = 3f;
 
+    private Transform hingeTransform;
     private bool isOpen = false;
     private Quaternion closedRotation;
     private Quaternion openRotation;
     private Coroutine rotateCoroutine;
+    private Camera mainCam;
+
+    private void Awake()
+    {
+        hingeTransform = transform.parent != null ? transform.parent : transform;
+    }
 
     private void Start()
     {
-        // Kapının başlangıçtaki kapalı rotasyonunu hafızaya al
-        closedRotation = transform.localRotation;
-        // Kapalı rotasyonun üzerine belirlenen açıyı ekle
-        openRotation = Quaternion.Euler(transform.localEulerAngles + new Vector3(0f, openAngle, 0f));
+        mainCam = Camera.main;
+        closedRotation = hingeTransform.localRotation;
+        openRotation = Quaternion.Euler(hingeTransform.localEulerAngles + new Vector3(0f, openAngle, 0f));
     }
 
-    /// <summary>
-    /// Kapı durumunu tersine çevirir (açıksa kapatır, kapalıysa açar).
-    /// </summary>
+    private void Update()
+    {
+        // Yeni Input System üzerinden fare sol tık kontrolü
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            Vector2 mousePos = Mouse.current.position.ReadValue();
+            Ray ray = mainCam.ScreenPointToRay(mousePos);
+
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                if (hit.transform == transform || hit.transform.IsChildOf(hingeTransform))
+                {
+                    ToggleDoor();
+                }
+            }
+        }
+    }
+
     public void ToggleDoor()
     {
         isOpen = !isOpen;
@@ -40,18 +60,12 @@ public class DoorController : MonoBehaviour
 
     private IEnumerator AnimateRotation(Quaternion targetRot)
     {
-        while (Quaternion.Angle(transform.localRotation, targetRot) > 0.1f)
+        while (Quaternion.Angle(hingeTransform.localRotation, targetRot) > 0.1f)
         {
-            transform.localRotation = Quaternion.Slerp(transform.localRotation, targetRot, Time.deltaTime * speed);
+            hingeTransform.localRotation = Quaternion.Slerp(hingeTransform.localRotation, targetRot, Time.deltaTime * speed);
             yield return null;
         }
 
-        transform.localRotation = targetRot;
-    }
-
-    // Prototip aşamasında Play modundayken kapıya fareyle tıklayarak test etmek için:
-    private void OnMouseDown()
-    {
-        ToggleDoor();
+        hingeTransform.localRotation = targetRot;
     }
 }
