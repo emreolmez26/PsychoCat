@@ -11,6 +11,7 @@ namespace PsychoCat.Interaction
         [SerializeField, Min(0f)] private float interactionDistance = 2.5f;
         [SerializeField] private LayerMask interactionLayerMask = Physics.DefaultRaycastLayers;
         [SerializeField] private InteractionPromptUI promptUI;
+        [SerializeField] private PlayerPickup playerPickup;
 
         private InputAction interactInput;
         private IInteractable currentTarget;
@@ -40,11 +41,27 @@ namespace PsychoCat.Interaction
                 return;
             }
 
+            if (playerPickup != null && playerPickup.IsHolding)
+            {
+                currentTarget = null;
+                if (promptUI != null)
+                    promptUI.SetPrompt("Drop | LMB - Throw");
+                playerPickup.HandleHeldInput(interactInput.WasPressedThisFrame());
+                // Consume this frame even if dropping/throwing emptied the hand.
+                if (!playerPickup.IsHolding)
+                    SetTarget(null);
+                return;
+            }
+
             SetTarget(FindTarget());
 
             // The initial press works even when the asset has a Hold interaction.
             if (currentTarget != null && interactInput.WasPressedThisFrame())
-                currentTarget.Interact();
+            {
+                currentTarget.Interact(gameObject);
+                if (playerPickup != null && playerPickup.IsHolding)
+                    SetTarget(null);
+            }
         }
 
         private IInteractable FindTarget()
