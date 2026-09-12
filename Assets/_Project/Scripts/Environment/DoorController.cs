@@ -1,9 +1,12 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using PsychoCat.Interaction;
 
-public class DoorController : MonoBehaviour
+public class DoorController : MonoBehaviour, IInteractable
 {
+    [SerializeField] private string interactionPrompt = "Open/Close Door";
+    public string InteractionPrompt => interactionPrompt;
+
     [Header("Açı Ayarları")]
     [SerializeField] private float openAngle = 90f;
     [SerializeField] private float speed = 3f;
@@ -13,7 +16,6 @@ public class DoorController : MonoBehaviour
     private Quaternion closedRotation;
     private Quaternion openRotation;
     private Coroutine rotateCoroutine;
-    private Camera mainCam;
 
     private void Awake()
     {
@@ -22,27 +24,13 @@ public class DoorController : MonoBehaviour
 
     private void Start()
     {
-        mainCam = Camera.main;
         closedRotation = hingeTransform.localRotation;
         openRotation = Quaternion.Euler(hingeTransform.localEulerAngles + new Vector3(0f, openAngle, 0f));
     }
 
-    private void Update()
+    public void Interact(GameObject interactor)
     {
-        // Yeni Input System üzerinden fare sol tık kontrolü
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
-        {
-            Vector2 mousePos = Mouse.current.position.ReadValue();
-            Ray ray = mainCam.ScreenPointToRay(mousePos);
-
-            if (Physics.Raycast(ray, out RaycastHit hit))
-            {
-                if (hit.transform == transform || hit.transform.IsChildOf(hingeTransform))
-                {
-                    ToggleDoor();
-                }
-            }
-        }
+        ToggleDoor();
     }
 
     public void ToggleDoor()

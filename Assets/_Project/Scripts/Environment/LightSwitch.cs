@@ -1,44 +1,28 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
+using PsychoCat.Interaction;
 
-public class LightSwitch : MonoBehaviour
+public class LightSwitch : MonoBehaviour, IInteractable
 {
+    [SerializeField] private string interactionPrompt = "Toggle Light";
+    public string InteractionPrompt => interactionPrompt;
+
     [Header("Lamba Referansı")]
     [SerializeField] private Light targetLight;
 
     [Header("Başlangıç Durumu")]
     [SerializeField] private bool startsOn = true;
 
-    private Camera mainCam;
-
     private void Start()
     {
-        mainCam = Camera.main;
-
-        // Başlangıç durumunu uygula
         if (targetLight != null)
         {
             targetLight.enabled = startsOn;
         }
     }
 
-    private void Update()
+    public void Interact(GameObject interactor)
     {
-        // Yeni Input System ile sol tık kontrolü
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
-        {
-            Vector2 mousePos = Mouse.current.position.ReadValue();
-            Ray ray = mainCam.ScreenPointToRay(mousePos);
-
-            if (Physics.Raycast(ray, out RaycastHit hit))
-            {
-                // Tıklanan nesne bu şalter mi?
-                if (hit.transform == transform)
-                {
-                    ToggleLight();
-                }
-            }
-        }
+        ToggleLight();
     }
 
     public void ToggleLight()

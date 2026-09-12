@@ -308,6 +308,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3635113447725337149, guid: e7c4bd10b1129d849917e69918061350, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 98787926eff8584499da80e1bde68f76, type: 2}
     - target: {fileID: 3962870208643160006, guid: e7c4bd10b1129d849917e69918061350, type: 3}
       propertyPath: m_Name
       value: Switch_Livingroom
@@ -524,22 +528,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 238330488236496909, guid: 4a6db579cc989c04aa6f5588846ba433, type: 3}
-      propertyPath: m_CollisionDetection
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 266419918762688761, guid: 4a6db579cc989c04aa6f5588846ba433, type: 3}
-      propertyPath: m_Radius
-      value: 0.50000006
-      objectReference: {fileID: 0}
-    - target: {fileID: 266419918762688761, guid: 4a6db579cc989c04aa6f5588846ba433, type: 3}
-      propertyPath: m_Center.x
-      value: 0.00000005960464
-      objectReference: {fileID: 0}
-    - target: {fileID: 266419918762688761, guid: 4a6db579cc989c04aa6f5588846ba433, type: 3}
-      propertyPath: m_Center.z
-      value: -0.00000008940696
-      objectReference: {fileID: 0}
     - target: {fileID: 1264434534085773715, guid: 4a6db579cc989c04aa6f5588846ba433, type: 3}
       propertyPath: m_Name
       value: Prop_GlassCup
@@ -698,6 +686,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3635113447725337149, guid: e7c4bd10b1129d849917e69918061350, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 98787926eff8584499da80e1bde68f76, type: 2}
     - target: {fileID: 4512583549075272533, guid: e7c4bd10b1129d849917e69918061350, type: 3}
       propertyPath: m_Name
       value: Light_Kitchen
@@ -715,10 +707,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2748595755151224586, guid: b092c5d9c2d98a9428510f633e8cc344, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 98787926eff8584499da80e1bde68f76, type: 2}
+    - target: {fileID: 4255037976265911815, guid: b092c5d9c2d98a9428510f633e8cc344, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 98787926eff8584499da80e1bde68f76, type: 2}
     - target: {fileID: 7196757297551540421, guid: b092c5d9c2d98a9428510f633e8cc344, type: 3}
       propertyPath: m_Name
       value: House_Greybox
       objectReference: {fileID: 0}
+    - target: {fileID: 8501194504350475027, guid: b092c5d9c2d98a9428510f633e8cc344, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 98787926eff8584499da80e1bde68f76, type: 2}
     - target: {fileID: 8781715642144682570, guid: b092c5d9c2d98a9428510f633e8cc344, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0
