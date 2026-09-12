@@ -9,7 +9,7 @@ namespace PsychoCat.Interaction
 
         public string InteractionPrompt => interactionPrompt;
 
-        public void Interact()
+        public void Interact(GameObject interactor)
         {
             Debug.Log("Prototype interactable activated.", this);
         }
