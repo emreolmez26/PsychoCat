@@ -16,9 +16,9 @@ public class CatAI : MonoBehaviour
     private bool isInvestigating = false;
 
     [Header("Hack Sistemi (Sabotaj)")]
-    public Transform hackTarget; // Şalterin konumu
-    public Light roomLight; // Kapatılacak ışık
-    public bool startHack = false; // Unity'den test etmek için tetikleyici
+    public Transform hackTarget;
+    public Light roomLight;
+    public bool startHack = false;
     private bool isHacking = false;
 
     void Start()
@@ -29,19 +29,22 @@ public class CatAI : MonoBehaviour
 
     void Update()
     {
-        // Eğer hack komutu geldiyse her şeyi bırakıp şaltere gider
+        // Inspector üzerinden manuel test etmeye devam edebilmen için
         if (startHack)
         {
-            agent.SetDestination(hackTarget.position);
-            isHacking = true;
+            TriggerHack(hackTarget, roomLight);
+            startHack = false;
+        }
 
-            // Şalterin yanına ulaştıysa ışığı kapat
-            if (agent.remainingDistance <= agent.stoppingDistance && !agent.pathPending)
+        if (isHacking)
+        {
+            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
             {
+                // Null check: Eğer ışık atanmamışsa oyun çökmez, sadece hata vermeden geçer
                 if (roomLight != null) roomLight.enabled = false;
-                startHack = false; // Görev bitti
+
                 isHacking = false;
-                timer = waitTime; // Bekleme süresini sıfırla
+                timer = waitTime;
             }
             return;
         }
@@ -52,6 +55,17 @@ public class CatAI : MonoBehaviour
         {
             PatrolBehavior();
         }
+    }
+
+    // Emre'nin istediği, dışarıdan (başka scriptlerden) çağrılabilir Public Hack Metodu
+    public void TriggerHack(Transform targetSwitch, Light targetLight)
+    {
+        if (targetSwitch == null) return; // Null check: Hedef yoksa kodu hiç çalıştırma
+
+        hackTarget = targetSwitch;
+        roomLight = targetLight;
+        isHacking = true;
+        agent.SetDestination(hackTarget.position);
     }
 
     void ListenForSounds()
@@ -81,7 +95,12 @@ public class CatAI : MonoBehaviour
         if (timer >= waitTime && !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
             Vector3 newDestination = RandomNavSphere(transform.position, patrolRadius, -1);
-            agent.SetDestination(newDestination);
+
+            // Eğer NavMesh başarısız olursa kedi olduğu yerde kalır, saçma bir yere gitmez
+            if (newDestination != transform.position)
+            {
+                agent.SetDestination(newDestination);
+            }
             timer = 0;
         }
     }
@@ -91,8 +110,14 @@ public class CatAI : MonoBehaviour
         Vector3 randomDirection = Random.insideUnitSphere * dist;
         randomDirection += origin;
         NavMeshHit navHit;
-        NavMesh.SamplePosition(randomDirection, out navHit, dist, layermask);
-        return navHit.position;
+
+        // Emre'nin istediği kontrol: Geçerli bir nokta bulunursa orayı, bulunamazsa kedinin şu anki konumunu döndür
+        if (NavMesh.SamplePosition(randomDirection, out navHit, dist, layermask))
+        {
+            return navHit.position;
+        }
+
+        return origin;
     }
 
     void OnDrawGizmosSelected()
