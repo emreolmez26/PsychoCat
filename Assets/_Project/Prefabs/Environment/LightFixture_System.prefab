@@ -195,7 +195,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 98787926eff8584499da80e1bde68f76, type: 2}
+  - {fileID: 2100000, guid: 606c2e3e5b2299149b06b2f5ee2201a5, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -252,6 +252,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0b5a0355dbc5b74a85bec06b12971b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LightSwitch
+  interactionPrompt: Toggle Light
   targetLight: {fileID: 3248185845867088598}
   startsOn: 1
 --- !u!1 &4512583549075272533
