@@ -1,5 +1,13 @@
 # Psycho Cat Development Guidelines
 
+Before starting any implementation task, read:
+docs/PSYCHO_CAT_PROJECT_BIBLE.md
+
+AGENTS.md defines coding/project rules.
+PSYCHO_CAT_PROJECT_BIBLE.md defines game/product context.
+The current task prompt defines immediate scope.
+If these conflict, stop and report the conflict instead of guessing.
+
 ## Project
 
 - Engine: Unity 6.3 LTS
