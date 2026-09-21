@@ -35,6 +35,9 @@ public class PowerOutageManager : MonoBehaviour
             if (l != null) l.enabled = false;
         }
 
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientLight = Color.black;
+
         // 2. Ay ışığı / Dış ışığı kıs
         if (directionalSun != null)
         {
