@@ -1,25 +1,43 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+// Kedinin girebileceği tüm durumların listesi
+public enum CatState
+{
+    Patrol,         // Normal ev içi dolaşma
+    LeadPlayer,     // CAT-006: Oyuncuyu uyandırıp mama kabına götürme
+    WatchPlayer,    // CAT-007: Durup oyuncuyu izleme
+    RidingVacuum,   // CAT-008: Robot süpürgeye binme
+    Sabotage        // CAT-009 & 010: Robot süpürge / Şalter bozma
+}
+
 public class CatAI : MonoBehaviour
 {
     private NavMeshAgent agent;
+
+    // Oyun başladığında kedi standart olarak dolaşma modunda olur
+    public CatState currentState = CatState.Patrol;
+
+    [Header("CAT-006: Wake & Lead Ayarları")]
+    public Transform player; // Oyuncunun konumu
+    public Transform foodBowl; // Mama kabının konumu
+    public float maxDistanceToPlayer = 5f; // Oyuncu bu mesafeden uzaklaşırsa kedi durup bekler
+
+    [Header("CAT-007: Teleport Ayarları")]
+    public Transform teleportTarget; // Kedinin ışınlanacağı nokta
+
+    [Header("CAT-008: Robot Vacuum Ayarları")]
+    public Transform robotVacuum; // Süpürge objesi
+
+    [Header("CAT-009 & 010: Sabotaj Ayarları")]
+    public Transform feederTarget; // Akıllı mama makinesinin konumu
+    public Transform switchTarget; // Elektrik şalterinin konumu
+    private Transform currentSabotageTarget; // O an hangisini bozuyorsa o hedef
 
     [Header("Patrol Ayarları")]
     public float patrolRadius = 10f;
     public float waitTime = 3f;
     private float timer;
-
-    [Header("Ses Algılama (Investigate)")]
-    public float hearingRadius = 15f;
-    public LayerMask soundLayer;
-    private bool isInvestigating = false;
-
-    [Header("Hack Sistemi (Sabotaj)")]
-    public Transform hackTarget;
-    public Light roomLight;
-    public bool startHack = false;
-    private bool isHacking = false;
 
     void Start()
     {
@@ -29,78 +47,69 @@ public class CatAI : MonoBehaviour
 
     void Update()
     {
-        // Inspector üzerinden manuel test etmeye devam edebilmen için
-        if (startHack)
+        // Kedinin o anki ruh hali neyse sadece o fonksiyonu çalıştırır
+        switch (currentState)
         {
-            TriggerHack(hackTarget, roomLight);
-            startHack = false;
-        }
-
-        if (isHacking)
-        {
-            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
-            {
-                // Null check: Eğer ışık atanmamışsa oyun çökmez, sadece hata vermeden geçer
-                if (roomLight != null) roomLight.enabled = false;
-
-                isHacking = false;
-                timer = waitTime;
-            }
-            return;
-        }
-
-        ListenForSounds();
-
-        if (!isInvestigating && !isHacking)
-        {
-            PatrolBehavior();
+            case CatState.Patrol:
+                PatrolBehavior();
+                break;
+            case CatState.LeadPlayer:
+                LeadPlayerBehavior();
+                break;
+            case CatState.WatchPlayer:
+                WatchPlayerBehavior();
+                break;
+            case CatState.RidingVacuum:
+                RideVacuumBehavior();
+                break;
+            case CatState.Sabotage:
+                SabotageBehavior();
+                break;
         }
     }
 
-    // Emre'nin istediği, dışarıdan (başka scriptlerden) çağrılabilir Public Hack Metodu
-    public void TriggerHack(Transform targetSwitch, Light targetLight)
+    // CAT-006: WAKE & LEAD BEHAVIOR
+    public void WakeAndLeadPlayer()
     {
-        if (targetSwitch == null) return; // Null check: Hedef yoksa kodu hiç çalıştırma
-
-        hackTarget = targetSwitch;
-        roomLight = targetLight;
-        isHacking = true;
-        agent.SetDestination(hackTarget.position);
+        currentState = CatState.LeadPlayer;
     }
 
-    void ListenForSounds()
+    void LeadPlayerBehavior()
     {
-        Collider[] heardSounds = Physics.OverlapSphere(transform.position, hearingRadius, soundLayer);
+        if (player == null || foodBowl == null) return;
 
-        if (heardSounds.Length > 0)
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+
+        if (distanceToPlayer > maxDistanceToPlayer)
         {
-            Vector3 soundLocation = heardSounds[0].transform.position;
-            agent.SetDestination(soundLocation);
-            isInvestigating = true;
+            Debug.Log("Oyuncu geride kaldı, durup onu bekliyorum!");
+            agent.isStopped = true;
+            Vector3 lookPos = player.position - transform.position;
+            lookPos.y = 0;
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookPos), Time.deltaTime * 5f);
         }
         else
         {
-            if (isInvestigating && agent.remainingDistance <= agent.stoppingDistance)
+            Debug.Log("Oyuncu peşimde, mama kabına yürüyorum...");
+            agent.isStopped = false;
+            agent.SetDestination(foodBowl.position);
+
+            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
             {
-                isInvestigating = false;
-                timer = waitTime;
+                Debug.Log("Mama kabına ulaştım, normal dolaşmaya dönüyorum!");
+                currentState = CatState.Patrol;
             }
         }
     }
 
+    // NORMAL DOLAŞMA (PATROL) BEHAVIOR
     void PatrolBehavior()
     {
         timer += Time.deltaTime;
-
         if (timer >= waitTime && !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
             Vector3 newDestination = RandomNavSphere(transform.position, patrolRadius, -1);
-
-            // Eğer NavMesh başarısız olursa kedi olduğu yerde kalır, saçma bir yere gitmez
-            if (newDestination != transform.position)
-            {
-                agent.SetDestination(newDestination);
-            }
+            if (newDestination != transform.position) agent.SetDestination(newDestination);
             timer = 0;
         }
     }
@@ -109,20 +118,104 @@ public class CatAI : MonoBehaviour
     {
         Vector3 randomDirection = Random.insideUnitSphere * dist;
         randomDirection += origin;
-        NavMeshHit navHit;
-
-        // Emre'nin istediği kontrol: Geçerli bir nokta bulunursa orayı, bulunamazsa kedinin şu anki konumunu döndür
-        if (NavMesh.SamplePosition(randomDirection, out navHit, dist, layermask))
-        {
+        if (NavMesh.SamplePosition(randomDirection, out NavMeshHit navHit, dist, layermask))
             return navHit.position;
-        }
-
         return origin;
     }
 
-    void OnDrawGizmosSelected()
+    // CAT-007: WATCH & TELEPORT BEHAVIOR
+    public void TriggerWatchPlayer()
     {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, hearingRadius);
+        currentState = CatState.WatchPlayer;
+    }
+
+    void WatchPlayerBehavior()
+    {
+        if (player == null) return;
+
+        // Kedi olduğu yerde çakılı kalır
+        agent.isStopped = true;
+
+        // Yavaşça ve ürpertici bir şekilde oyuncuya döner
+        Vector3 lookPos = player.position - transform.position;
+        lookPos.y = 0;
+        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookPos), Time.deltaTime * 3f);
+
+        Debug.Log("Gözlerimi oyuncuya diktim, onu izliyorum...");
+    }
+
+    [ContextMenu("Işınlanmayı Test Et")]
+    public void TeleportOutOfSight()
+    {
+        if (teleportTarget == null) return;
+
+        Vector3 safePosition = new Vector3(teleportTarget.position.x, 1f, teleportTarget.position.z);
+        agent.Warp(safePosition);
+
+        agent.enabled = true;
+        agent.isStopped = false;
+        currentState = CatState.Patrol;
+
+        Debug.Log("Kedi çaktırmadan ışınlandı ve devriyeye devam ediyor!");
+    }
+
+    // CAT-008: ROBOT VACUUM BEHAVIOR
+    [ContextMenu("Süpürgeye Bin (CAT-008)")]
+    public void TriggerVacuumEvent()
+    {
+        currentState = CatState.RidingVacuum;
+    }
+
+    void RideVacuumBehavior()
+    {
+        if (robotVacuum == null) return;
+
+        // Kedinin kendi yürüme motorunu kapat
+        agent.enabled = false;
+
+        // Kedi tam süpürgenin merkezine kilitlenir 
+        transform.position = robotVacuum.position + new Vector3(0, 1.1f, 0);
+
+        // Yüzünü süpürgenin baktığı yöne çevirir
+        transform.rotation = robotVacuum.rotation;
+
+        Debug.Log("Süpürgenin üstündeyim, odayı turluyorum!");
+    }
+
+    // CAT-009 & 010: SABOTAGE BEHAVIOR
+    [ContextMenu("Mama Makinesini Boz (CAT-009)")]
+    public void TriggerFeederSabotage()
+    {
+        currentSabotageTarget = feederTarget;
+        currentState = CatState.Sabotage;
+    }
+
+    [ContextMenu("Şalteri İndir (CAT-010)")]
+    public void TriggerSwitchSabotage()
+    {
+        currentSabotageTarget = switchTarget;
+        currentState = CatState.Sabotage;
+    }
+
+    void SabotageBehavior()
+    {
+        if (currentSabotageTarget == null) return;
+
+        // Süpürgeden yeni inmiş olabilir
+        agent.enabled = true;
+        agent.isStopped = false;
+
+        agent.SetDestination(currentSabotageTarget.position);
+
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+        {
+            agent.isStopped = true;
+
+            Vector3 lookPos = currentSabotageTarget.position - transform.position;
+            lookPos.y = 0;
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookPos), Time.deltaTime * 5f);
+
+            Debug.Log(currentSabotageTarget.name + " hedefine ulaştım ve bozuyorum! Ortalık karışacak!");
+        }
     }
 }
