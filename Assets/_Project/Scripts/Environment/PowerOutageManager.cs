@@ -18,6 +18,18 @@ public class PowerOutageManager : MonoBehaviour
     [Header("State")]
     [SerializeField] private bool isPowerCut = false;
 
+    private readonly Dictionary<Light, bool> previousHouseLights = new Dictionary<Light, bool>();
+    private readonly Dictionary<GameObject, bool> previousCandles = new Dictionary<GameObject, bool>();
+    private Light previousSun;
+    private float previousSunIntensity;
+    private Color previousSunColor;
+    private UnityEngine.Rendering.AmbientMode previousAmbientMode;
+    private Color previousAmbientLight;
+    private Color previousAmbientSky;
+    private Color previousAmbientEquator;
+    private Color previousAmbientGround;
+    private bool hasPowerSnapshot;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -27,6 +39,28 @@ public class PowerOutageManager : MonoBehaviour
     [ContextMenu("Trigger Power Cut")]
     public void CutPower()
     {
+        // Repeated cuts must not replace the original state with the outage state.
+        if (hasPowerSnapshot) return;
+
+        previousHouseLights.Clear();
+        foreach (var light in houseLights)
+            if (light != null) previousHouseLights[light] = light.enabled;
+        previousCandles.Clear();
+        foreach (var candle in emergencyCandleLights)
+            if (candle != null) previousCandles[candle] = candle.activeSelf;
+
+        previousSun = directionalSun;
+        if (previousSun != null)
+        {
+            previousSunIntensity = previousSun.intensity;
+            previousSunColor = previousSun.color;
+        }
+        previousAmbientMode = RenderSettings.ambientMode;
+        previousAmbientLight = RenderSettings.ambientLight;
+        previousAmbientSky = RenderSettings.ambientSkyColor;
+        previousAmbientEquator = RenderSettings.ambientEquatorColor;
+        previousAmbientGround = RenderSettings.ambientGroundColor;
+        hasPowerSnapshot = true;
         isPowerCut = true;
 
         // 1. Ev ışıklarını kapat
@@ -60,23 +94,34 @@ public class PowerOutageManager : MonoBehaviour
     [ContextMenu("Restore Power")]
     public void RestorePower()
     {
+        if (!hasPowerSnapshot) return;
         isPowerCut = false;
 
-        foreach (var l in houseLights)
+        foreach (var entry in previousHouseLights)
         {
-            if (l != null) l.enabled = true;
+            if (entry.Key != null) entry.Key.enabled = entry.Value;
         }
 
-        if (directionalSun != null)
+        if (previousSun != null)
         {
-            directionalSun.intensity = 1.0f;
-            directionalSun.color = Color.white;
+            previousSun.intensity = previousSunIntensity;
+            previousSun.color = previousSunColor;
         }
 
-        foreach (var candle in emergencyCandleLights)
+        RenderSettings.ambientMode = previousAmbientMode;
+        RenderSettings.ambientLight = previousAmbientLight;
+        RenderSettings.ambientSkyColor = previousAmbientSky;
+        RenderSettings.ambientEquatorColor = previousAmbientEquator;
+        RenderSettings.ambientGroundColor = previousAmbientGround;
+
+        foreach (var entry in previousCandles)
         {
-            if (candle != null) candle.SetActive(false);
+            if (entry.Key != null) entry.Key.SetActive(entry.Value);
         }
+        previousHouseLights.Clear();
+        previousCandles.Clear();
+        previousSun = null;
+        hasPowerSnapshot = false;
 
         Debug.Log("<color=green>[PowerOutage] Elektrikler geri geldi.</color>");
     }

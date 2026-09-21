@@ -118,7 +118,7 @@ PrefabInstance:
     - target: {fileID: 2443508374171024179, guid: 14f1682557ba0fe439662ba9f41f9ad0, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 98787926eff8584499da80e1bde68f76, type: 2}
+      objectReference: {fileID: 2100000, guid: c56d5f151feeb184ba59e7179e720ba7, type: 2}
     - target: {fileID: 3553345753001961866, guid: 14f1682557ba0fe439662ba9f41f9ad0, type: 3}
       propertyPath: m_Name
       value: Wall_Standard (4)
@@ -398,7 +398,7 @@ PrefabInstance:
     - target: {fileID: 2443508374171024179, guid: 14f1682557ba0fe439662ba9f41f9ad0, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 98787926eff8584499da80e1bde68f76, type: 2}
+      objectReference: {fileID: 2100000, guid: c56d5f151feeb184ba59e7179e720ba7, type: 2}
     - target: {fileID: 3553345753001961866, guid: 14f1682557ba0fe439662ba9f41f9ad0, type: 3}
       propertyPath: m_Name
       value: Wall_Standard (5)
